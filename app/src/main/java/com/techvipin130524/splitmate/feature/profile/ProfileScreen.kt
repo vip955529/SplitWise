@@ -38,7 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Switch
 import androidx.compose.ui.text.input.KeyboardType
 import com.techvipin130524.splitmate.core.designsystem.component.PersonAvatar
 import com.techvipin130524.splitmate.core.utils.CurrencyUtils
@@ -139,6 +145,26 @@ fun ProfileScreen(
                             if ((user?.monthlyBudgetPaise ?: 0L) > 0)
                                 "Monthly Budget: ${CurrencyUtils.formatPaise(user?.monthlyBudgetPaise ?: 0L)}"
                             else "Set Monthly Budget Limit"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Notifications, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Activity Notifications",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Switch(
+                            checked = uiState.notificationsEnabled,
+                            onCheckedChange = viewModel::toggleNotifications
                         )
                     }
                 }

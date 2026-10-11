@@ -17,6 +17,8 @@ data class ProfileUiState(
     val user: User? = null,
     val isLoading: Boolean = false,
     val isUpdatingName: Boolean = false,
+    val defaultCurrency: String = "INR",
+    val notificationsEnabled: Boolean = true,
     val error: String? = null,
     val message: String? = null
 )
@@ -95,6 +97,14 @@ class ProfileViewModel @Inject constructor(
                     )
                 }
         }
+    }
+
+    fun updateDefaultCurrency(currency: String) {
+        _uiState.value = _uiState.value.copy(defaultCurrency = currency, message = "Default currency set to $currency")
+    }
+
+    fun toggleNotifications(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(notificationsEnabled = enabled)
     }
 
     fun logout() {
