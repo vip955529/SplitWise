@@ -1,6 +1,9 @@
 package com.techvipin130524.splitmate.feature.settlement
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +39,8 @@ fun SettleUpDialog(
     viewModel: SettlementViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var upiIdInput by remember { mutableStateOf("") }
     var fromDropdownExpanded by remember { mutableStateOf(false) }
     var toDropdownExpanded by remember { mutableStateOf(false) }
 
@@ -134,6 +139,35 @@ fun SettleUpDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = upiIdInput,
+                    onValueChange = { upiIdInput = it },
+                    label = { Text("Recipient UPI ID (Optional)") },
+                    placeholder = { Text("e.g. name@upi") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (upiIdInput.isNotBlank() && uiState.amountString.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = {
+                            val uri = Uri.parse("upi://pay?pa=${upiIdInput.trim()}&pn=${toUser?.userName ?: "Recipient"}&am=${uiState.amountString.trim()}&cu=INR")
+                            val upiIntent = Intent(Intent.ACTION_VIEW, uri)
+                            try {
+                                context.startActivity(Intent.createChooser(upiIntent, "Pay via UPI App"))
+                            } catch (e: Exception) {
+                                // Handled if no UPI app installed
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Pay via UPI App 💸")
+                    }
+                }
             }
         },
         confirmButton = {

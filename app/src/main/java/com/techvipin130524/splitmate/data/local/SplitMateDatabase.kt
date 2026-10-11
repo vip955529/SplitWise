@@ -30,7 +30,7 @@ import com.techvipin130524.splitmate.data.local.entity.UserEntity
         SettlementEntity::class,
         ActivityLogEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class SplitMateDatabase : RoomDatabase() {

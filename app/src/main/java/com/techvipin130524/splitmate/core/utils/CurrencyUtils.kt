@@ -5,6 +5,18 @@ import kotlin.math.abs
 
 object CurrencyUtils {
 
+    fun getCurrencySymbol(code: String): String {
+        return when (code.uppercase()) {
+            "USD" -> "$"
+            "EUR" -> "€"
+            "GBP" -> "£"
+            "CAD" -> "CA$"
+            "AED" -> "AED "
+            "JPY" -> "¥"
+            else -> "₹"
+        }
+    }
+
     /**
      * Converts minor units (paise) to display string format.
      * Example: 1050L -> "₹10.50", 1000L -> "₹10.00"

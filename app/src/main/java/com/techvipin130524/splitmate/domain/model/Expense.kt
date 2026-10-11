@@ -19,6 +19,14 @@ enum class ExpenseCategory(val displayName: String, val iconName: String) {
     OTHER("Other", "more_horiz")
 }
 
+enum class RecurrenceFrequency(val displayName: String) {
+    NONE("One-time"),
+    DAILY("Daily"),
+    WEEKLY("Weekly"),
+    MONTHLY("Monthly"),
+    YEARLY("Yearly")
+}
+
 data class Expense(
     val id: String = "",
     val groupId: String = "",
@@ -26,6 +34,7 @@ data class Expense(
     val totalAmount: Long = 0L, // Amount in minor units (paise)
     val currency: String = "INR",
     val category: ExpenseCategory = ExpenseCategory.OTHER,
+    val recurrence: RecurrenceFrequency = RecurrenceFrequency.NONE,
     val note: String = "",
     val receiptImageUrl: String? = null,
     val createdBy: String = "",
