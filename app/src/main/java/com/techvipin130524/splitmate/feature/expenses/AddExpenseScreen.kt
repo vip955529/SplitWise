@@ -32,6 +32,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,6 +66,7 @@ fun AddExpenseScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var groupDropdownExpanded by remember { mutableStateOf(false) }
     var categoryDropdownExpanded by remember { mutableStateOf(false) }
+    var showConverterDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(initialGroupId) {
         if (!initialGroupId.isNullOrEmpty()) {
@@ -127,6 +133,33 @@ fun AddExpenseScreen(
                             }
                         )
                     }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        viewModel.scanReceiptSimulated { desc, amt, cat -> }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.CameraAlt, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Scan Receipt 📸")
+                }
+
+                OutlinedButton(
+                    onClick = { showConverterDialog = true },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.CurrencyExchange, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Currency 💱")
                 }
             }
 
@@ -442,5 +475,47 @@ fun AddExpenseScreen(
                 Text("Save Expense")
             }
         }
+    }
+
+    if (showConverterDialog) {
+        var foreignAmount by remember { mutableStateOf("") }
+        var currencyCode by remember { mutableStateOf("USD") }
+
+        AlertDialog(
+            onDismissRequest = { showConverterDialog = false },
+            title = { Text("Currency Exchange Converter") },
+            text = {
+                Column {
+                    Text("Select foreign currency and enter amount:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = foreignAmount,
+                        onValueChange = { foreignAmount = it },
+                        label = { Text("Amount ($currencyCode)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val dbl = foreignAmount.toDoubleOrNull() ?: 0.0
+                        val inr = viewModel.convertCurrencyToRupees(dbl, currencyCode)
+                        viewModel.updateTotalAmount(String.format(java.util.Locale.US, "%.2f", inr))
+                        showConverterDialog = false
+                    },
+                    enabled = foreignAmount.isNotBlank()
+                ) {
+                    Text("Apply (₹)")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showConverterDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

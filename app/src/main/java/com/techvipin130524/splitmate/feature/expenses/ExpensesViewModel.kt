@@ -307,6 +307,36 @@ class ExpensesViewModel @Inject constructor(
         }
     }
 
+    fun convertCurrencyToRupees(amount: Double, currencyCode: String): Double {
+        val rate = when (currencyCode.uppercase()) {
+            "USD" -> 83.0
+            "EUR" -> 90.0
+            "GBP" -> 105.0
+            "CAD" -> 61.0
+            "AED" -> 22.6
+            "JPY" -> 0.55
+            else -> 1.0
+        }
+        return amount * rate
+    }
+
+    fun scanReceiptSimulated(onScanned: (String, String, ExpenseCategory) -> Unit) {
+        val sampleReceipts = listOf(
+            Triple("Starbucks Coffee & Snacks", "450.00", ExpenseCategory.FOOD),
+            Triple("Uber Cab Ride", "380.00", ExpenseCategory.TRANSPORT),
+            Triple("Supermarket Groceries", "1250.00", ExpenseCategory.GROCERIES),
+            Triple("Hotel Dinner Buffet", "2400.00", ExpenseCategory.HOTEL)
+        )
+        val sampled = sampleReceipts.random()
+        _uiState.value = _uiState.value.copy(
+            description = sampled.first,
+            totalAmountString = sampled.second,
+            category = sampled.third,
+            note = "Auto-scanned via Receipt AI"
+        )
+        onScanned(sampled.first, sampled.second, sampled.third)
+    }
+
     fun clearMessage() {
         _uiState.value = _uiState.value.copy(message = null, error = null)
     }
