@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/splitmate_rupee_split_icon" />
-    <foreground android:drawable="@drawable/splitmate_rupee_split_icon" />
-    <monochrome android:drawable="@drawable/splitmate_rupee_split_icon" />
+    <background android:drawable="@drawable/splitmate_icon" />
+    <foreground android:drawable="@drawable/splitmate_icon" />
+    <monochrome android:drawable="@drawable/splitmate_icon" />
 </adaptive-icon>

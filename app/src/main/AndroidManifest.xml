@@ -7,9 +7,9 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@drawable/splitmate_rupee_split_icon"
+        android:icon="@drawable/splitmate_icon"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/splitmate_rupee_split_icon"
+        android:roundIcon="@drawable/splitmate_icon"
         android:supportsRtl="true"
         android:theme="@style/Theme.SplitMate">
         <activity
