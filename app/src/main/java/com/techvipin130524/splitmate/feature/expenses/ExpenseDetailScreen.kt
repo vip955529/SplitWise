@@ -18,6 +18,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
@@ -48,6 +52,7 @@ fun ExpenseDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showReceiptDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(expenseId) {
         viewModel.loadExpenseDetails(expenseId)
@@ -116,6 +121,34 @@ fun ExpenseDetailScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+
+                        if (!expense.receiptImageUrl.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { showReceiptDialog = true },
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Receipt,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "View Attached Receipt Image 🧾",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -175,6 +208,26 @@ fun ExpenseDetailScreen(
             dismissButton = {
                 OutlinedButton(onClick = { showDeleteDialog = false }) {
                     Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showReceiptDialog) {
+        AlertDialog(
+            onDismissRequest = { showReceiptDialog = false },
+            title = { Text("Attached Receipt") },
+            text = {
+                Column {
+                    Text(
+                        text = "Receipt Attachment URL:\n${expense?.receiptImageUrl ?: ""}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showReceiptDialog = false }) {
+                    Text("Close")
                 }
             }
         )

@@ -33,6 +33,7 @@ data class ExpensesUiState(
     val description: String = "",
     val totalAmountString: String = "",
     val note: String = "",
+    val receiptImageUrl: String = "",
     val selectedPayerId: String = "",
     val category: ExpenseCategory = ExpenseCategory.OTHER,
     val splitType: SplitType = SplitType.EQUAL,
@@ -112,6 +113,10 @@ class ExpensesViewModel @Inject constructor(
 
     fun updateNote(note: String) {
         _uiState.value = _uiState.value.copy(note = note)
+    }
+
+    fun updateReceiptImageUrl(url: String) {
+        _uiState.value = _uiState.value.copy(receiptImageUrl = url)
     }
 
     fun updateSplitType(type: SplitType) {
@@ -202,6 +207,7 @@ class ExpensesViewModel @Inject constructor(
                 totalAmount = totalPaise,
                 category = state.category,
                 note = state.note.trim(),
+                receiptImageUrl = state.receiptImageUrl.trim().ifEmpty { null },
                 createdBy = state.currentUserId,
                 createdByName = payerName,
                 createdAt = System.currentTimeMillis(),

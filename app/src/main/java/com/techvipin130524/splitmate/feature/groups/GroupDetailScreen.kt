@@ -17,7 +17,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Download
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -82,6 +84,49 @@ fun GroupDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = {
+                            try {
+                                val csvHeader = "Expense ID,Description,Category,Total Amount (Paise),Paid By,Created At\n"
+                                val csvRows = uiState.groupExpenses.joinToString("\n") { e ->
+                                    "\"${e.id}\",\"${e.description}\",\"${e.category.displayName}\",${e.totalAmount},\"${e.createdByName}\",\"${e.createdAt}\""
+                                }
+                                val csvContent = csvHeader + csvRows
+                                val cacheFile = File(context.cacheDir, "${group?.name ?: "Group"}_Expenses.csv")
+                                cacheFile.writeText(csvContent)
+
+                                val contentUri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    cacheFile
+                                )
+
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/csv"
+                                    putExtra(Intent.EXTRA_SUBJECT, "${group?.name} CSV Report")
+                                    putExtra(Intent.EXTRA_STREAM, contentUri)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, "Share CSV Report"))
+                            } catch (e: Exception) {
+                                // Fallback to plain text share if FileProvider not configured
+                                val report = buildString {
+                                    appendLine("📊 ${group?.name ?: "Group"} Expense Summary")
+                                    uiState.groupExpenses.forEach { exp ->
+                                        appendLine("• ${exp.description}: ${CurrencyUtils.formatPaise(exp.totalAmount)} (Paid by ${exp.createdByName})")
+                                    }
+                                }
+                                val textIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, report)
+                                }
+                                context.startActivity(Intent.createChooser(textIntent, "Share Summary"))
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Download, contentDescription = "Export CSV")
+                    }
+
                     IconButton(
                         onClick = {
                             val report = buildString {

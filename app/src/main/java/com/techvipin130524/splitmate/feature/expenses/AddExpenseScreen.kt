@@ -161,6 +161,16 @@ fun AddExpenseScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            OutlinedTextField(
+                value = uiState.receiptImageUrl,
+                onValueChange = viewModel::updateReceiptImageUrl,
+                label = { Text("Receipt Image URL (Optional)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             // Category Dropdown
             ExposedDropdownMenuBox(
                 expanded = categoryDropdownExpanded,
