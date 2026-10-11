@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Switch
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -205,6 +207,50 @@ fun AddExpenseScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Paid By / Multiple Payers Toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (uiState.isMultiplePayers) "Multiple Payers" else "Single Payer",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                Text("Multiple Payers", style = MaterialTheme.typography.labelMedium)
+                Spacer(modifier = Modifier.width(8.dp))
+                Switch(
+                    checked = uiState.isMultiplePayers,
+                    onCheckedChange = viewModel::toggleMultiplePayers
+                )
+            }
+
+            if (uiState.isMultiplePayers) {
+                val members = uiState.selectedGroup?.members ?: emptyList()
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    Text("Enter amount paid by each person:", style = MaterialTheme.typography.labelSmall)
+                    members.forEach { m ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(m.userName, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                            OutlinedTextField(
+                                value = uiState.payerAmounts[m.userId] ?: "",
+                                onValueChange = { viewModel.updatePayerAmount(m.userId, it) },
+                                label = { Text("Paid ₹") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.width(110.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Split Type Tabs
             Text("Split Type", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(4.dp))
@@ -219,6 +265,50 @@ fun AddExpenseScreen(
                         onClick = { viewModel.updateSplitType(type) },
                         text = { Text(type.name) }
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Paid By / Multiple Payers Toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (uiState.isMultiplePayers) "Multiple Payers" else "Single Payer",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                Text("Multiple Payers", style = MaterialTheme.typography.labelMedium)
+                Spacer(modifier = Modifier.width(8.dp))
+                Switch(
+                    checked = uiState.isMultiplePayers,
+                    onCheckedChange = viewModel::toggleMultiplePayers
+                )
+            }
+
+            if (uiState.isMultiplePayers) {
+                val members = uiState.selectedGroup?.members ?: emptyList()
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    Text("Enter amount paid by each person:", style = MaterialTheme.typography.labelSmall)
+                    members.forEach { m ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(m.userName, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                            OutlinedTextField(
+                                value = uiState.payerAmounts[m.userId] ?: "",
+                                onValueChange = { viewModel.updatePayerAmount(m.userId, it) },
+                                label = { Text("Paid ₹") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.width(110.dp)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -293,6 +383,50 @@ fun AddExpenseScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Paid By / Multiple Payers Toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (uiState.isMultiplePayers) "Multiple Payers" else "Single Payer",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                Text("Multiple Payers", style = MaterialTheme.typography.labelMedium)
+                Spacer(modifier = Modifier.width(8.dp))
+                Switch(
+                    checked = uiState.isMultiplePayers,
+                    onCheckedChange = viewModel::toggleMultiplePayers
+                )
+            }
+
+            if (uiState.isMultiplePayers) {
+                val members = uiState.selectedGroup?.members ?: emptyList()
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                    Text("Enter amount paid by each person:", style = MaterialTheme.typography.labelSmall)
+                    members.forEach { m ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(m.userName, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                            OutlinedTextField(
+                                value = uiState.payerAmounts[m.userId] ?: "",
+                                onValueChange = { viewModel.updatePayerAmount(m.userId, it) },
+                                label = { Text("Paid ₹") },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier.width(110.dp)
+                            )
                         }
                     }
                 }

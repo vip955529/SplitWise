@@ -35,6 +35,8 @@ data class ExpensesUiState(
     val note: String = "",
     val receiptImageUrl: String = "",
     val selectedPayerId: String = "",
+    val isMultiplePayers: Boolean = false,
+    val payerAmounts: Map<String, String> = emptyMap(),
     val category: ExpenseCategory = ExpenseCategory.OTHER,
     val splitType: SplitType = SplitType.EQUAL,
     val selectedParticipantIds: Set<String> = emptySet(),
@@ -105,6 +107,16 @@ class ExpensesViewModel @Inject constructor(
 
     fun updatePayer(userId: String) {
         _uiState.value = _uiState.value.copy(selectedPayerId = userId)
+    }
+
+    fun toggleMultiplePayers(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(isMultiplePayers = enabled)
+    }
+
+    fun updatePayerAmount(userId: String, amountString: String) {
+        val updated = _uiState.value.payerAmounts.toMutableMap()
+        updated[userId] = amountString
+        _uiState.value = _uiState.value.copy(payerAmounts = updated)
     }
 
     fun updateCategory(category: ExpenseCategory) {
@@ -199,7 +211,23 @@ class ExpensesViewModel @Inject constructor(
         }
 
         splitResult.onSuccess { participants ->
-            val payerName = group.members.find { it.userId == state.selectedPayerId }?.userName ?: state.currentUserName
+            val payersList = if (state.isMultiplePayers) {
+                val list = group.members.mapNotNull { m ->
+                    val amtPaise = CurrencyUtils.parseToPaise(state.payerAmounts[m.userId] ?: "0") ?: 0L
+                    if (amtPaise > 0) ExpensePayer(userId = m.userId, userName = m.userName, amount = amtPaise) else null
+                }
+                val payersSum = list.sumOf { it.amount }
+                if (payersSum != totalPaise) {
+                    _uiState.value = state.copy(error = "Sum of payer amounts (${CurrencyUtils.formatPaise(payersSum)}) must equal total amount (${CurrencyUtils.formatPaise(totalPaise)})")
+                    return
+                }
+                list
+            } else {
+                val singlePayerName = group.members.find { it.userId == state.selectedPayerId }?.userName ?: state.currentUserName
+                listOf(ExpensePayer(userId = state.selectedPayerId, userName = singlePayerName, amount = totalPaise))
+            }
+
+            val primaryPayerName = payersList.firstOrNull()?.userName ?: state.currentUserName
 
             val expense = Expense(
                 groupId = group.id,
@@ -209,16 +237,10 @@ class ExpensesViewModel @Inject constructor(
                 note = state.note.trim(),
                 receiptImageUrl = state.receiptImageUrl.trim().ifEmpty { null },
                 createdBy = state.currentUserId,
-                createdByName = payerName,
+                createdByName = primaryPayerName,
                 createdAt = System.currentTimeMillis(),
                 participants = participants,
-                payers = listOf(
-                    ExpensePayer(
-                        userId = state.selectedPayerId,
-                        userName = payerName,
-                        amount = totalPaise
-                    )
-                )
+                payers = payersList
             )
 
             viewModelScope.launch {
@@ -229,7 +251,7 @@ class ExpensesViewModel @Inject constructor(
                             groupId = group.id,
                             groupName = group.name,
                             title = "Added '${expense.description}'",
-                            description = "Total ${CurrencyUtils.formatPaise(totalPaise)} paid by $payerName",
+                            description = "Total ${CurrencyUtils.formatPaise(totalPaise)} paid by $primaryPayerName",
                             type = ActivityType.EXPENSE_ADDED
                         )
                     )

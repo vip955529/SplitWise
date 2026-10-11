@@ -48,7 +48,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material3.FilterChip
 import com.techvipin130524.splitmate.core.designsystem.component.EmptyState
+import com.techvipin130524.splitmate.domain.model.ExpenseCategory
 import com.techvipin130524.splitmate.core.designsystem.component.ExpenseRow
 import com.techvipin130524.splitmate.core.designsystem.component.PersonAvatar
 import com.techvipin130524.splitmate.core.utils.CurrencyUtils
@@ -64,6 +67,7 @@ fun GroupDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTabIndex by remember { mutableIntStateOf(0) }
+    var selectedCategoryFilter by remember { mutableStateOf<ExpenseCategory?>(null) }
     val tabs = listOf("Expenses", "Balances", "Members")
 
     LaunchedEffect(groupId) {
@@ -213,34 +217,68 @@ fun GroupDetailScreen(
             when (selectedTabIndex) {
                 0 -> {
                     // Expenses Tab
-                    if (uiState.groupExpenses.isEmpty()) {
-                        EmptyState(
-                            title = "No Expenses Yet",
-                            subtitle = "Tap 'Add Expense' to record your first shared cost in this group.",
-                            buttonText = "Add Expense",
-                            onButtonClick = { onAddExpenseClick(groupId) },
-                            modifier = Modifier.fillMaxSize()
-                        )
+                    val filteredExpenses = if (selectedCategoryFilter == null) {
+                        uiState.groupExpenses
                     } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
-                        ) {
-                            items(uiState.groupExpenses, key = { it.id }) { expense ->
-                                val userShare = expense.participants.find { it.userId == uiState.currentUserId }?.amount ?: 0L
-                                val isPayer = expense.createdBy == uiState.currentUserId || expense.payers.any { it.userId == uiState.currentUserId }
+                        uiState.groupExpenses.filter { it.category == selectedCategoryFilter }
+                    }
 
-                                ExpenseRow(
-                                    description = expense.description,
-                                    createdByName = expense.createdByName,
-                                    totalAmountPaise = expense.totalAmount,
-                                    userSharePaise = userShare,
-                                    isPayer = isPayer,
-                                    category = expense.category,
-                                    onClick = {},
-                                    modifier = Modifier.padding(vertical = 4.dp)
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        // Category Filter Chips Row
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            item {
+                                FilterChip(
+                                    selected = selectedCategoryFilter == null,
+                                    onClick = { selectedCategoryFilter = null },
+                                    label = { Text("All") },
+                                    modifier = Modifier.padding(end = 6.dp)
                                 )
+                            }
+                            items(ExpenseCategory.entries) { cat ->
+                                FilterChip(
+                                    selected = selectedCategoryFilter == cat,
+                                    onClick = {
+                                        selectedCategoryFilter = if (selectedCategoryFilter == cat) null else cat
+                                    },
+                                    label = { Text(cat.displayName) },
+                                    modifier = Modifier.padding(end = 6.dp)
+                                )
+                            }
+                        }
+
+                        if (filteredExpenses.isEmpty()) {
+                            EmptyState(
+                                title = if (selectedCategoryFilter != null) "No ${selectedCategoryFilter?.displayName} Expenses" else "No Expenses Yet",
+                                subtitle = "Tap 'Add Expense' to record a shared cost in this group.",
+                                buttonText = "Add Expense",
+                                onButtonClick = { onAddExpenseClick(groupId) },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp)
+                            ) {
+                                items(filteredExpenses, key = { it.id }) { expense ->
+                                    val userShare = expense.participants.find { it.userId == uiState.currentUserId }?.amount ?: 0L
+                                    val isPayer = expense.createdBy == uiState.currentUserId || expense.payers.any { it.userId == uiState.currentUserId }
+
+                                    ExpenseRow(
+                                        description = expense.description,
+                                        createdByName = expense.createdByName,
+                                        totalAmountPaise = expense.totalAmount,
+                                        userSharePaise = userShare,
+                                        isPayer = isPayer,
+                                        category = expense.category,
+                                        onClick = {},
+                                        modifier = Modifier.padding(vertical = 4.dp)
+                                    )
+                                }
                             }
                         }
                     }
