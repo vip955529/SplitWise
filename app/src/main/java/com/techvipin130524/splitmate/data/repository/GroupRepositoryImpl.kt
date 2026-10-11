@@ -61,10 +61,12 @@ class GroupRepositoryImpl @Inject constructor(
     ): Result<Group> {
         return try {
             val groupId = UUID.randomUUID().toString()
+            val inviteCode = "SPLIT-" + (1000..9999).random()
             val group = Group(
                 id = groupId,
                 name = name,
                 description = description,
+                inviteCode = inviteCode,
                 createdBy = createdByUserId,
                 members = initialMembers.map { it.copy(groupId = groupId) }
             )
@@ -75,6 +77,51 @@ class GroupRepositoryImpl @Inject constructor(
             firestore.collection("groups").document(groupId).set(group).await()
 
             Result.success(group)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun joinGroupByCode(
+        currentUserId: String,
+        currentUserName: String,
+        currentUserEmail: String,
+        inviteCode: String
+    ): Result<Group> {
+        return try {
+            val query = firestore.collection("groups")
+                .whereEqualTo("inviteCode", inviteCode.trim().uppercase())
+                .get()
+                .await()
+
+            val groupDoc = query.documents.firstOrNull()
+                ?: return Result.failure(IllegalArgumentException("Group with invite code '$inviteCode' not found"))
+
+            val group = groupDoc.toObject(Group::class.java)
+                ?: return Result.failure(IllegalStateException("Failed to parse group data"))
+
+            val newMember = GroupMember(
+                groupId = group.id,
+                userId = currentUserId,
+                userName = currentUserName,
+                userEmail = currentUserEmail,
+                role = "MEMBER"
+            )
+
+            val updatedMembers: List<GroupMember> = if (group.members.none { it.userId == currentUserId }) {
+                group.members + newMember
+            } else {
+                group.members
+            }
+
+            val updatedGroup = group.copy(members = updatedMembers)
+
+            groupDao.insertGroup(updatedGroup.toEntity())
+            groupDao.insertGroupMembers(updatedMembers.map { it.toEntity(group.id) })
+
+            firestore.collection("groups").document(group.id).set(updatedGroup).await()
+
+            Result.success(updatedGroup)
         } catch (e: Exception) {
             Result.failure(e)
         }

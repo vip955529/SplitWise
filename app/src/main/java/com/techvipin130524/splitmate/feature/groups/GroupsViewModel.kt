@@ -160,6 +160,31 @@ class GroupsViewModel @Inject constructor(
         }
     }
 
+    fun joinGroupByCode(code: String) {
+        val state = _uiState.value
+        if (code.isBlank()) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            groupRepository.joinGroupByCode(
+                currentUserId = state.currentUserId,
+                currentUserName = state.currentUserName,
+                currentUserEmail = state.currentUserEmail,
+                inviteCode = code
+            ).onSuccess { group ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    message = "Joined group '${group.name}'!"
+                )
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.localizedMessage ?: "Failed to join group"
+                )
+            }
+        }
+    }
+
     fun clearMessage() {
         _uiState.value = _uiState.value.copy(message = null, error = null)
     }

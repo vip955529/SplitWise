@@ -246,6 +246,18 @@ class ExpensesViewModel @Inject constructor(
         }
     }
 
+    fun deleteExpense(expenseId: String, onDeleted: () -> Unit) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSaving = true, error = null)
+            expenseRepository.deleteExpense(expenseId).onSuccess {
+                _uiState.value = _uiState.value.copy(isSaving = false, message = "Expense deleted")
+                onDeleted()
+            }.onFailure { e ->
+                _uiState.value = _uiState.value.copy(isSaving = false, error = e.localizedMessage ?: "Failed to delete expense")
+            }
+        }
+    }
+
     fun clearMessage() {
         _uiState.value = _uiState.value.copy(message = null, error = null)
     }
