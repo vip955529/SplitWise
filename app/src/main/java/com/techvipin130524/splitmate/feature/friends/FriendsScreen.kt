@@ -46,9 +46,12 @@ import com.techvipin130524.splitmate.core.designsystem.component.EmptyState
 import com.techvipin130524.splitmate.core.designsystem.component.LoadingState
 import com.techvipin130524.splitmate.core.designsystem.component.PersonAvatar
 
+import androidx.compose.foundation.clickable
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsScreen(
+    onFriendClick: (String) -> Unit = {},
     viewModel: FriendsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -102,6 +105,7 @@ fun FriendsScreen(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .clickable { onFriendClick(friend.friendUserId) }
                                 .padding(vertical = 4.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)

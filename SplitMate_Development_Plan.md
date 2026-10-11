@@ -2290,5 +2290,6 @@ All 14 phases from Product Planning to Production Release have been fully comple
 13. **Advanced Phase (Smart Reminders & Timeline)**: Upcoming recurring bill reminders card (`UpcomingBillsCard`) and Group Activity Feed Timeline tab.
 14. **Advanced Phase (Discussion Comments & Chat Thread)**: Expense discussion comments thread (`ExpenseComment`), Room comment persistence (schema v7), and comment posting UI.
 15. **Advanced Phase (AI Receipt Scanner & Currency Exchange Converter)**: Smart AI receipt auto-scanner simulation (`scanReceiptSimulated`) and multi-currency exchange rate converter dialog (`CurrencyExchange`).
+16. **Advanced Phase (User Preferred UPI ID & Room DB v8)**: User preferred UPI ID setting (`preferredUpiId`) and Room DB schema v8 migration.
 
 **SplitMate is a complete, production-ready product.**

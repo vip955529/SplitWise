@@ -25,6 +25,7 @@ import com.techvipin130524.splitmate.feature.auth.presentation.SessionState
 import com.techvipin130524.splitmate.feature.auth.presentation.SplashScreen
 import com.techvipin130524.splitmate.feature.expenses.AddExpenseScreen
 import com.techvipin130524.splitmate.feature.expenses.ExpenseDetailScreen
+import com.techvipin130524.splitmate.feature.friends.FriendDetailScreen
 import com.techvipin130524.splitmate.feature.friends.FriendsScreen
 import com.techvipin130524.splitmate.feature.groups.CreateGroupScreen
 import com.techvipin130524.splitmate.feature.groups.GroupDetailScreen
@@ -163,7 +164,20 @@ fun AppNavHost(
             }
 
             composable(Routes.FRIENDS) {
-                FriendsScreen()
+                FriendsScreen(
+                    onFriendClick = { friendId -> navController.navigate(Routes.friendDetails(friendId)) }
+                )
+            }
+
+            composable(
+                route = Routes.FRIEND_DETAILS,
+                arguments = listOf(navArgument("friendId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val friendId = backStackEntry.arguments?.getString("friendId") ?: ""
+                FriendDetailScreen(
+                    friendId = friendId,
+                    onBackClick = { navController.popBackStack() }
+                )
             }
 
             composable(Routes.PROFILE) {
