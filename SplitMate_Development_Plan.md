@@ -2287,5 +2287,6 @@ All 14 phases from Product Planning to Production Release have been fully comple
 10. **Phase 11 (Polish & Design System)**: Monthly Category Analytics card, live expense search, category chips, and Material 3 theme.
 11. **Phase 12 (Testing)**: Unit tests for split algorithms and debt simplification (100% passing).
 12. **Phase 13 (Production & GitHub Release)**: Full documentation (`README.md`, `LICENSE`) and GitHub sync at [https://github.com/vip955529/SplitWise.git](https://github.com/vip955529/SplitWise.git).
+13. **Advanced Phase (Smart Reminders & Timeline)**: Upcoming recurring bill reminders card (`UpcomingBillsCard`) and Group Activity Feed Timeline tab.
 
 **SplitMate is a complete, production-ready product.**
