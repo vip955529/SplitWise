@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -59,8 +60,10 @@ fun ProfileScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showEditDialog by remember { mutableStateOf(false) }
     var showBudgetDialog by remember { mutableStateOf(false) }
+    var showUpiDialog by remember { mutableStateOf(false) }
     var newNameInput by remember { mutableStateOf("") }
     var newBudgetInput by remember { mutableStateOf("") }
+    var newUpiInput by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.message, uiState.error) {
         uiState.message?.let {
@@ -145,6 +148,24 @@ fun ProfileScreen(
                             if ((user?.monthlyBudgetPaise ?: 0L) > 0)
                                 "Monthly Budget: ${CurrencyUtils.formatPaise(user?.monthlyBudgetPaise ?: 0L)}"
                             else "Set Monthly Budget Limit"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            newUpiInput = user?.preferredUpiId ?: ""
+                            showUpiDialog = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Payment, contentDescription = null)
+                        Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                        Text(
+                            if (!user?.preferredUpiId.isNullOrBlank())
+                                "Default UPI ID: ${user?.preferredUpiId}"
+                            else "Set Default UPI ID"
                         )
                     }
 
@@ -243,6 +264,36 @@ fun ProfileScreen(
             },
             dismissButton = {
                 OutlinedButton(onClick = { showBudgetDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showUpiDialog) {
+        AlertDialog(
+            onDismissRequest = { showUpiDialog = false },
+            title = { Text("Set Default UPI ID") },
+            text = {
+                OutlinedTextField(
+                    value = newUpiInput,
+                    onValueChange = { newUpiInput = it },
+                    label = { Text("UPI ID (e.g. name@upi)") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.updatePreferredUpiId(newUpiInput)
+                        showUpiDialog = false
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showUpiDialog = false }) {
                     Text("Cancel")
                 }
             }

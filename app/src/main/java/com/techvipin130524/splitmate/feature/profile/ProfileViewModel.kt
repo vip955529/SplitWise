@@ -99,6 +99,20 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun updatePreferredUpiId(upiId: String) {
+        val currentUser = _uiState.value.user ?: return
+        viewModelScope.launch {
+            val updatedUser = currentUser.copy(preferredUpiId = upiId.trim(), updatedAt = System.currentTimeMillis())
+            userRepository.createOrUpdateUser(updatedUser)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        user = updatedUser,
+                        message = "Preferred UPI ID saved!"
+                    )
+                }
+        }
+    }
+
     fun updateDefaultCurrency(currency: String) {
         _uiState.value = _uiState.value.copy(defaultCurrency = currency, message = "Default currency set to $currency")
     }

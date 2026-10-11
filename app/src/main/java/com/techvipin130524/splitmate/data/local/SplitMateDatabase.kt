@@ -33,7 +33,7 @@ import com.techvipin130524.splitmate.data.local.entity.UserEntity
         ActivityLogEntity::class,
         ExpenseCommentEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class SplitMateDatabase : RoomDatabase() {

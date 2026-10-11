@@ -29,8 +29,8 @@ import com.techvipin130524.splitmate.data.local.entity.ExpenseCommentEntity
 import com.techvipin130524.splitmate.domain.model.ExpenseComment
 
 // User Mappers
-fun User.toEntity() = UserEntity(id, name, email, profileImageUrl, monthlyBudgetPaise, createdAt, updatedAt)
-fun UserEntity.toDomain() = User(id, name, email, profileImageUrl, monthlyBudgetPaise, createdAt, updatedAt)
+fun User.toEntity() = UserEntity(id, name, email, profileImageUrl, monthlyBudgetPaise, preferredUpiId, createdAt, updatedAt)
+fun UserEntity.toDomain() = User(id, name, email, profileImageUrl, monthlyBudgetPaise, preferredUpiId, createdAt, updatedAt)
 
 // Friend Mappers
 fun Friend.toEntity() = FriendEntity(id, userId, friendUserId, friendName, friendEmail, friendProfileImageUrl, status.name, createdAt)
