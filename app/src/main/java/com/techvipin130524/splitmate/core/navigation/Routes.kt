@@ -14,6 +14,9 @@ object Routes {
     fun groupDetails(groupId: String) = "group_details/$groupId"
 
     const val FRIENDS = "friends"
+    const val FRIEND_DETAILS = "friend_details/{friendId}"
+    fun friendDetails(friendId: String) = "friend_details/$friendId"
+
     const val PROFILE = "profile"
 
     const val ADD_EXPENSE = "add_expense?groupId={groupId}"

@@ -72,7 +72,7 @@ fun GroupDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var selectedCategoryFilter by remember { mutableStateOf<ExpenseCategory?>(null) }
-    val tabs = listOf("Expenses", "Balances", "Members")
+    val tabs = listOf("Expenses", "Balances", "Members", "Activity")
 
     LaunchedEffect(groupId) {
         viewModel.selectGroup(groupId)
@@ -463,6 +463,47 @@ fun GroupDetailScreen(
                                                 )
                                             }
                                         }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                3 -> {
+                    // Activity Feed Tab
+                    if (uiState.groupActivityLogs.isEmpty()) {
+                        EmptyState(
+                            title = "No Activity Logged",
+                            subtitle = "Expenses and settlements recorded in this group will appear here.",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        ) {
+                            items(uiState.groupActivityLogs, key = { it.id }) { log ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Text(
+                                            text = log.title,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = log.description,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
                                     }
                                 }
                             }

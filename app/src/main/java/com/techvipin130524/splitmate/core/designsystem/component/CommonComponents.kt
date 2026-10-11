@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.People
@@ -45,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.techvipin130524.splitmate.core.navigation.Routes
 import com.techvipin130524.splitmate.core.utils.CurrencyUtils
+import androidx.compose.material3.ButtonDefaults
+import com.techvipin130524.splitmate.domain.model.Expense
 import com.techvipin130524.splitmate.domain.model.ExpenseCategory
 
 sealed class BottomNavItem(val route: String, val title: String, val icon: ImageVector) {
@@ -405,6 +408,73 @@ fun LoadingState(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator()
+    }
+}
+
+@Composable
+fun UpcomingBillsCard(
+    upcomingExpenses: List<Expense>,
+    onRemindClick: (Expense) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (upcomingExpenses.isEmpty()) return
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CalendarMonth,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Upcoming Recurring Bills",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            upcomingExpenses.forEach { exp ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = exp.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                        Text(
+                            text = "${exp.recurrence.displayName} • ${CurrencyUtils.formatPaise(exp.totalAmount)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
+
+                    Button(
+                        onClick = { onRemindClick(exp) },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onTertiaryContainer)
+                    ) {
+                        Text("Remind", color = MaterialTheme.colorScheme.tertiaryContainer)
+                    }
+                }
+            }
+        }
     }
 }
 

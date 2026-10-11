@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import com.techvipin130524.splitmate.core.designsystem.component.BalanceCard
 import com.techvipin130524.splitmate.core.designsystem.component.BudgetTrackerCard
 import com.techvipin130524.splitmate.core.designsystem.component.CategoryAnalyticsCard
+import com.techvipin130524.splitmate.core.designsystem.component.UpcomingBillsCard
 import com.techvipin130524.splitmate.core.designsystem.component.ExpenseRow
 import com.techvipin130524.splitmate.core.designsystem.component.GroupCard
 import com.techvipin130524.splitmate.core.designsystem.component.LoadingState
@@ -115,6 +116,13 @@ fun HomeScreen(
                             monthlySpendPaise = uiState.totalSpendPaise,
                             budgetLimitPaise = uiState.monthlyBudgetPaise,
                             onSetBudgetClick = {}
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        UpcomingBillsCard(
+                            upcomingExpenses = uiState.upcomingBills,
+                            onRemindClick = {}
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))

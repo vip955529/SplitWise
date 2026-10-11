@@ -22,6 +22,8 @@ import com.techvipin130524.splitmate.domain.model.ExpenseCategory
 import com.techvipin130524.splitmate.domain.repository.ActivityLogRepository
 import com.techvipin130524.splitmate.domain.repository.UserRepository
 
+import com.techvipin130524.splitmate.domain.model.RecurrenceFrequency
+
 data class HomeUiState(
     val currentUserId: String = "",
     val currentUserName: String = "",
@@ -29,6 +31,7 @@ data class HomeUiState(
     val youAreOwedPaise: Long = 0L,
     val recentExpenses: List<Expense> = emptyList(),
     val filteredExpenses: List<Expense> = emptyList(),
+    val upcomingBills: List<Expense> = emptyList(),
     val searchQuery: String = "",
     val categorySpendMap: Map<ExpenseCategory, Long> = emptyMap(),
     val totalSpendPaise: Long = 0L,
@@ -76,9 +79,14 @@ class HomeViewModel @Inject constructor(
 
                     launch {
                         expenseRepository.observeAllExpenses().collectLatest { expenses ->
-                            _uiState.value = _uiState.value.copy(recentExpenses = expenses.take(10))
-                            calculateOverallBalance(uid, expenses)
-                            calculateCategoryAnalytics(expenses)
+                            val active = expenses.filter { !it.isDeleted }
+                            val recurring = active.filter { it.recurrence != RecurrenceFrequency.NONE }
+                            _uiState.value = _uiState.value.copy(
+                                recentExpenses = active.take(10),
+                                upcomingBills = recurring.take(3)
+                            )
+                            calculateOverallBalance(uid, active)
+                            calculateCategoryAnalytics(active)
                             applyFilter()
                         }
                     }

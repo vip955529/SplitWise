@@ -2,7 +2,9 @@ package com.techvipin130524.splitmate.feature.groups
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.techvipin130524.splitmate.domain.model.ActivityLog
 import com.techvipin130524.splitmate.domain.model.Expense
+import com.techvipin130524.splitmate.domain.repository.ActivityLogRepository
 import com.techvipin130524.splitmate.domain.model.Friend
 import com.techvipin130524.splitmate.domain.model.Group
 import com.techvipin130524.splitmate.domain.model.GroupMember
@@ -34,6 +36,7 @@ data class GroupsUiState(
     val selectedGroup: Group? = null,
     val groupExpenses: List<Expense> = emptyList(),
     val groupSettlements: List<Settlement> = emptyList(),
+    val groupActivityLogs: List<ActivityLog> = emptyList(),
     val groupNetBalances: List<UserNetBalance> = emptyList(),
     val groupSimplifiedDebts: List<DebtTransaction> = emptyList(),
     val error: String? = null,
@@ -46,7 +49,8 @@ class GroupsViewModel @Inject constructor(
     private val groupRepository: GroupRepository,
     private val friendRepository: FriendRepository,
     private val expenseRepository: ExpenseRepository,
-    private val settlementRepository: SettlementRepository
+    private val settlementRepository: SettlementRepository,
+    private val activityLogRepository: ActivityLogRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(GroupsUiState())
@@ -100,6 +104,12 @@ class GroupsViewModel @Inject constructor(
                     settlementRepository.observeSettlementsForGroup(groupId).collectLatest { settlements ->
                         _uiState.value = _uiState.value.copy(groupSettlements = settlements)
                         recalculateBalances(userNames)
+                    }
+                }
+
+                launch {
+                    activityLogRepository.observeActivityLogsForGroup(groupId).collectLatest { logs ->
+                        _uiState.value = _uiState.value.copy(groupActivityLogs = logs)
                     }
                 }
             }
