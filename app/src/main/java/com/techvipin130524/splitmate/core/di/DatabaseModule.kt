@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.techvipin130524.splitmate.data.local.SplitMateDatabase
 import com.techvipin130524.splitmate.data.local.dao.ActivityLogDao
+import com.techvipin130524.splitmate.data.local.dao.ExpenseCommentDao
 import com.techvipin130524.splitmate.data.local.dao.ExpenseDao
 import com.techvipin130524.splitmate.data.local.dao.FriendDao
 import com.techvipin130524.splitmate.data.local.dao.GroupDao
@@ -49,4 +50,7 @@ object DatabaseModule {
 
     @Provides
     fun provideActivityLogDao(db: SplitMateDatabase): ActivityLogDao = db.activityLogDao()
+
+    @Provides
+    fun provideExpenseCommentDao(db: SplitMateDatabase): ExpenseCommentDao = db.expenseCommentDao()
 }

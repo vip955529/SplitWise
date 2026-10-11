@@ -25,6 +25,9 @@ import com.techvipin130524.splitmate.domain.model.User
 
 import com.techvipin130524.splitmate.domain.model.RecurrenceFrequency
 
+import com.techvipin130524.splitmate.data.local.entity.ExpenseCommentEntity
+import com.techvipin130524.splitmate.domain.model.ExpenseComment
+
 // User Mappers
 fun User.toEntity() = UserEntity(id, name, email, profileImageUrl, monthlyBudgetPaise, createdAt, updatedAt)
 fun UserEntity.toDomain() = User(id, name, email, profileImageUrl, monthlyBudgetPaise, createdAt, updatedAt)
@@ -53,6 +56,10 @@ fun ExpensePayerEntity.toDomain() = ExpensePayer(id, expenseId, userId, userName
 // Settlement Mappers
 fun Settlement.toEntity() = SettlementEntity(id, groupId, fromUserId, fromUserName, toUserId, toUserName, amount, currency, note, createdAt)
 fun SettlementEntity.toDomain() = Settlement(id, groupId, fromUserId, fromUserName, toUserId, toUserName, amount, currency, note, createdAt)
+
+// ExpenseComment Mappers
+fun ExpenseComment.toEntity() = ExpenseCommentEntity(id, expenseId, userId, userName, commentText, timestamp)
+fun ExpenseCommentEntity.toDomain() = ExpenseComment(id, expenseId, userId, userName, commentText, timestamp)
 
 // ActivityLog Mappers
 fun ActivityLog.toEntity() = ActivityLogEntity(id, groupId, groupName, title, description, type.name, timestamp)

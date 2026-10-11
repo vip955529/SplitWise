@@ -11,6 +11,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,6 +55,7 @@ fun ExpenseDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showReceiptDialog by remember { mutableStateOf(false) }
+    var commentInput by remember { mutableStateOf("") }
 
     LaunchedEffect(expenseId) {
         viewModel.loadExpenseDetails(expenseId)
@@ -162,7 +165,7 @@ fun ExpenseDetailScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                LazyColumn {
+                LazyColumn(modifier = Modifier.weight(1f)) {
                     items(expense.participants) { participant ->
                         Row(
                             modifier = Modifier
@@ -181,6 +184,76 @@ fun ExpenseDetailScreen(
                                 fontWeight = FontWeight.Bold
                             )
                         }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Discussion Comments",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (uiState.comments.isEmpty()) {
+                    Text(
+                        text = "No comments yet.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    LazyColumn(modifier = Modifier.height(120.dp)) {
+                        items(uiState.comments, key = { it.id }) { comment ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            ) {
+                                Column(modifier = Modifier.padding(10.dp)) {
+                                    Text(
+                                        text = comment.userName,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = comment.commentText,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = commentInput,
+                        onValueChange = { commentInput = it },
+                        placeholder = { Text("Write a comment...") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(
+                        onClick = {
+                            viewModel.addComment(expenseId, commentInput)
+                            commentInput = ""
+                        },
+                        enabled = commentInput.isNotBlank()
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "Send Comment",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }

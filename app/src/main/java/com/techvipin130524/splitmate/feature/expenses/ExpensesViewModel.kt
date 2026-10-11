@@ -23,7 +23,9 @@ import javax.inject.Inject
 import com.techvipin130524.splitmate.domain.model.ActivityLog
 import com.techvipin130524.splitmate.domain.model.ActivityType
 import com.techvipin130524.splitmate.domain.model.ExpenseCategory
+import com.techvipin130524.splitmate.domain.model.ExpenseComment
 import com.techvipin130524.splitmate.domain.repository.ActivityLogRepository
+import com.techvipin130524.splitmate.domain.repository.ExpenseCommentRepository
 
 data class ExpensesUiState(
     val currentUserId: String = "",
@@ -45,6 +47,7 @@ data class ExpensesUiState(
     val shares: Map<String, String> = emptyMap(),
     val isSaving: Boolean = false,
     val selectedExpense: Expense? = null,
+    val comments: List<ExpenseComment> = emptyList(),
     val error: String? = null,
     val message: String? = null
 )
@@ -54,7 +57,8 @@ class ExpensesViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val groupRepository: GroupRepository,
     private val expenseRepository: ExpenseRepository,
-    private val activityLogRepository: ActivityLogRepository
+    private val activityLogRepository: ActivityLogRepository,
+    private val expenseCommentRepository: ExpenseCommentRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExpensesUiState())
@@ -271,6 +275,23 @@ class ExpensesViewModel @Inject constructor(
             expenseRepository.getExpenseDetails(expenseId).onSuccess { expense ->
                 _uiState.value = _uiState.value.copy(selectedExpense = expense)
             }
+            expenseCommentRepository.observeCommentsForExpense(expenseId).collectLatest { commentList ->
+                _uiState.value = _uiState.value.copy(comments = commentList)
+            }
+        }
+    }
+
+    fun addComment(expenseId: String, text: String) {
+        val state = _uiState.value
+        if (text.isBlank()) return
+        viewModelScope.launch {
+            val comment = ExpenseComment(
+                expenseId = expenseId,
+                userId = state.currentUserId,
+                userName = state.currentUserName,
+                commentText = text.trim()
+            )
+            expenseCommentRepository.addComment(comment)
         }
     }
 
