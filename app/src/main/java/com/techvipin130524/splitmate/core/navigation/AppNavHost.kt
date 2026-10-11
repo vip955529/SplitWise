@@ -96,7 +96,7 @@ fun AppNavHost(
         NavHost(
             navController = navController,
             startDestination = Routes.SPLASH,
-            modifier = Modifier.padding(padding)
+            modifier = Modifier.padding(bottom = padding.calculateBottomPadding())
         ) {
             composable(Routes.SPLASH) {
                 SplashScreen()
