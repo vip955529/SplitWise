@@ -1,6 +1,7 @@
 package com.techvipin130524.splitmate.feature.groups
 
 import android.content.Intent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.ui.platform.LocalContext
@@ -18,6 +19,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.core.content.FileProvider
 import java.io.File
 import androidx.compose.material.icons.filled.Payment
@@ -155,6 +159,25 @@ fun GroupDetailScreen(
                         }
                     ) {
                         Icon(Icons.Default.Share, contentDescription = "Share Report")
+                    }
+
+                    var topMenuExpanded by remember { mutableStateOf(false) }
+                    IconButton(onClick = { topMenuExpanded = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More Options")
+                    }
+                    DropdownMenu(
+                        expanded = topMenuExpanded,
+                        onDismissRequest = { topMenuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Leave Group", color = MaterialTheme.colorScheme.error) },
+                            onClick = {
+                                topMenuExpanded = false
+                                viewModel.leaveGroup(groupId) {
+                                    onBackClick()
+                                }
+                            }
+                        )
                     }
                 }
             )
@@ -360,12 +383,17 @@ fun GroupDetailScreen(
 
                 2 -> {
                     // Members Tab
+                    val currentMemberRole = group?.members?.find { it.userId == uiState.currentUserId }?.role ?: "MEMBER"
+                    val isAdmin = currentMemberRole == "ADMIN" || group?.createdBy == uiState.currentUserId
+
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(16.dp)
                     ) {
                         items(group?.members ?: emptyList()) { member ->
+                            var memberMenuExpanded by remember { mutableStateOf(false) }
+
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -395,8 +423,47 @@ fun GroupDetailScreen(
                                     Text(
                                         text = member.role,
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.primary
+                                        color = if (member.role == "ADMIN") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontWeight = FontWeight.Bold
                                     )
+
+                                    if (isAdmin && member.userId != uiState.currentUserId) {
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Box {
+                                            IconButton(onClick = { memberMenuExpanded = true }) {
+                                                Icon(Icons.Default.MoreVert, contentDescription = "Member Actions")
+                                            }
+                                            DropdownMenu(
+                                                expanded = memberMenuExpanded,
+                                                onDismissRequest = { memberMenuExpanded = false }
+                                            ) {
+                                                if (member.role == "ADMIN") {
+                                                    DropdownMenuItem(
+                                                        text = { Text("Make Member") },
+                                                        onClick = {
+                                                            memberMenuExpanded = false
+                                                            viewModel.updateMemberRole(groupId, member.userId, "MEMBER")
+                                                        }
+                                                    )
+                                                } else {
+                                                    DropdownMenuItem(
+                                                        text = { Text("Make Admin") },
+                                                        onClick = {
+                                                            memberMenuExpanded = false
+                                                            viewModel.updateMemberRole(groupId, member.userId, "ADMIN")
+                                                        }
+                                                    )
+                                                }
+                                                DropdownMenuItem(
+                                                    text = { Text("Remove from Group", color = MaterialTheme.colorScheme.error) },
+                                                    onClick = {
+                                                        memberMenuExpanded = false
+                                                        viewModel.removeMember(groupId, member.userId)
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }

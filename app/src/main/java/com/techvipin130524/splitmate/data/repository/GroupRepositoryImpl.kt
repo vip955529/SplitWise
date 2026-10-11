@@ -144,4 +144,38 @@ class GroupRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun updateMemberRole(groupId: String, userId: String, newRole: String): Result<Unit> {
+        return try {
+            val groupResult = getGroupDetails(groupId)
+            if (groupResult.isSuccess) {
+                val existingGroup = groupResult.getOrThrow()
+                val updatedMembers = existingGroup.members.map { m ->
+                    if (m.userId == userId) m.copy(role = newRole) else m
+                }
+                val updatedGroup = existingGroup.copy(members = updatedMembers)
+                groupDao.insertGroupMembers(updatedMembers.map { it.toEntity(groupId) })
+                firestore.collection("groups").document(groupId).set(updatedGroup).await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun removeGroupMember(groupId: String, userId: String): Result<Unit> {
+        return try {
+            val groupResult = getGroupDetails(groupId)
+            if (groupResult.isSuccess) {
+                val existingGroup = groupResult.getOrThrow()
+                val updatedMembers = existingGroup.members.filter { it.userId != userId }
+                val updatedGroup = existingGroup.copy(members = updatedMembers)
+                groupDao.insertGroupMembers(updatedMembers.map { it.toEntity(groupId) })
+                firestore.collection("groups").document(groupId).set(updatedGroup).await()
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

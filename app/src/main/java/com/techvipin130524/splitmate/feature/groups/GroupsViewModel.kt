@@ -185,6 +185,31 @@ class GroupsViewModel @Inject constructor(
         }
     }
 
+    fun updateMemberRole(groupId: String, userId: String, newRole: String) {
+        viewModelScope.launch {
+            groupRepository.updateMemberRole(groupId, userId, newRole).onSuccess {
+                selectGroup(groupId)
+            }
+        }
+    }
+
+    fun removeMember(groupId: String, userId: String) {
+        viewModelScope.launch {
+            groupRepository.removeGroupMember(groupId, userId).onSuccess {
+                selectGroup(groupId)
+            }
+        }
+    }
+
+    fun leaveGroup(groupId: String, onLeft: () -> Unit) {
+        val state = _uiState.value
+        viewModelScope.launch {
+            groupRepository.removeGroupMember(groupId, state.currentUserId).onSuccess {
+                onLeft()
+            }
+        }
+    }
+
     fun clearMessage() {
         _uiState.value = _uiState.value.copy(message = null, error = null)
     }
