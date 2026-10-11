@@ -20,6 +20,7 @@ import javax.inject.Inject
 import com.techvipin130524.splitmate.domain.model.ActivityLog
 import com.techvipin130524.splitmate.domain.model.ExpenseCategory
 import com.techvipin130524.splitmate.domain.repository.ActivityLogRepository
+import com.techvipin130524.splitmate.domain.repository.UserRepository
 
 data class HomeUiState(
     val currentUserId: String = "",
@@ -31,6 +32,7 @@ data class HomeUiState(
     val searchQuery: String = "",
     val categorySpendMap: Map<ExpenseCategory, Long> = emptyMap(),
     val totalSpendPaise: Long = 0L,
+    val monthlyBudgetPaise: Long = 0L,
     val activityLogs: List<ActivityLog> = emptyList(),
     val groups: List<Group> = emptyList(),
     val isLoading: Boolean = true
@@ -39,6 +41,7 @@ data class HomeUiState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
     private val expenseRepository: ExpenseRepository,
     private val settlementRepository: SettlementRepository,
     private val groupRepository: GroupRepository,
@@ -62,6 +65,14 @@ class HomeViewModel @Inject constructor(
                     )
 
                     val uid = authUser.uid
+
+                    launch {
+                        userRepository.observeUser(uid).collectLatest { user ->
+                            if (user != null) {
+                                _uiState.value = _uiState.value.copy(monthlyBudgetPaise = user.monthlyBudgetPaise)
+                            }
+                        }
+                    }
 
                     launch {
                         expenseRepository.observeAllExpenses().collectLatest { expenses ->

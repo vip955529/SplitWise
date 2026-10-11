@@ -44,6 +44,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.techvipin130524.splitmate.core.designsystem.component.BalanceCard
+import com.techvipin130524.splitmate.core.designsystem.component.BudgetTrackerCard
 import com.techvipin130524.splitmate.core.designsystem.component.CategoryAnalyticsCard
 import com.techvipin130524.splitmate.core.designsystem.component.ExpenseRow
 import com.techvipin130524.splitmate.core.designsystem.component.GroupCard
@@ -106,6 +107,14 @@ fun HomeScreen(
                         BalanceCard(
                             youOwePaise = uiState.youOwePaise,
                             youAreOwedPaise = uiState.youAreOwedPaise
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        BudgetTrackerCard(
+                            monthlySpendPaise = uiState.totalSpendPaise,
+                            budgetLimitPaise = uiState.monthlyBudgetPaise,
+                            onSetBudgetClick = {}
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))

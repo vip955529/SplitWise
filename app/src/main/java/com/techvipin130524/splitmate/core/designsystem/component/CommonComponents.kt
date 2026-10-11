@@ -409,6 +409,86 @@ fun LoadingState(modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun BudgetTrackerCard(
+    monthlySpendPaise: Long,
+    budgetLimitPaise: Long,
+    onSetBudgetClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Monthly Spending Budget",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = if (budgetLimitPaise > 0) "Edit Limit" else "Set Limit",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { onSetBudgetClick() }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (budgetLimitPaise <= 0) {
+                Text(
+                    text = "No monthly budget limit set yet. Tap 'Set Limit' to set a monthly spend goal.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                val fraction = (monthlySpendPaise.toFloat() / budgetLimitPaise).coerceIn(0f, 1f)
+                val progressColor = when {
+                    fraction >= 0.9f -> Color(0xFFC62828) // Red
+                    fraction >= 0.7f -> Color(0xFFEF6C00) // Orange
+                    else -> Color(0xFF2E7D32) // Green
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Spent: ${CurrencyUtils.formatPaise(monthlySpendPaise)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Goal: ${CurrencyUtils.formatPaise(budgetLimitPaise)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                LinearProgressIndicator(
+                    progress = { fraction },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    color = progressColor,
+                    trackColor = MaterialTheme.colorScheme.surface
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun CategoryAnalyticsCard(
     categorySpendMap: Map<ExpenseCategory, Long>,
     totalSpendPaise: Long,

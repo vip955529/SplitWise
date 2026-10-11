@@ -12,6 +12,7 @@ data class ExpenseEntity(
     val currency: String,
     val category: String,
     val recurrence: String,
+    val tags: String,
     val note: String,
     val receiptImageUrl: String?,
     val createdBy: String,

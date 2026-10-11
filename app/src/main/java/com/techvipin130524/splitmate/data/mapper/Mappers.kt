@@ -26,8 +26,8 @@ import com.techvipin130524.splitmate.domain.model.User
 import com.techvipin130524.splitmate.domain.model.RecurrenceFrequency
 
 // User Mappers
-fun User.toEntity() = UserEntity(id, name, email, profileImageUrl, createdAt, updatedAt)
-fun UserEntity.toDomain() = User(id, name, email, profileImageUrl, createdAt, updatedAt)
+fun User.toEntity() = UserEntity(id, name, email, profileImageUrl, monthlyBudgetPaise, createdAt, updatedAt)
+fun UserEntity.toDomain() = User(id, name, email, profileImageUrl, monthlyBudgetPaise, createdAt, updatedAt)
 
 // Friend Mappers
 fun Friend.toEntity() = FriendEntity(id, userId, friendUserId, friendName, friendEmail, friendProfileImageUrl, status.name, createdAt)
@@ -41,8 +41,8 @@ fun GroupMember.toEntity(groupId: String) = GroupMemberEntity(groupId, userId, u
 fun GroupMemberEntity.toDomain() = GroupMember(groupId, userId, userName, userEmail, role, joinedAt)
 
 // Expense Mappers
-fun Expense.toEntity() = ExpenseEntity(id, groupId, description, totalAmount, currency, category.name, recurrence.name, note, receiptImageUrl, createdBy, createdByName, createdAt, updatedAt, isDeleted)
-fun ExpenseEntity.toDomain(participants: List<ExpenseParticipant> = emptyList(), payers: List<ExpensePayer> = emptyList()) = Expense(id, groupId, description, totalAmount, currency, try { ExpenseCategory.valueOf(category) } catch (e: Exception) { ExpenseCategory.OTHER }, try { RecurrenceFrequency.valueOf(recurrence) } catch (e: Exception) { RecurrenceFrequency.NONE }, note, receiptImageUrl, createdBy, createdByName, createdAt, updatedAt, isDeleted, participants, payers)
+fun Expense.toEntity() = ExpenseEntity(id, groupId, description, totalAmount, currency, category.name, recurrence.name, tags, note, receiptImageUrl, createdBy, createdByName, createdAt, updatedAt, isDeleted)
+fun ExpenseEntity.toDomain(participants: List<ExpenseParticipant> = emptyList(), payers: List<ExpensePayer> = emptyList()) = Expense(id, groupId, description, totalAmount, currency, try { ExpenseCategory.valueOf(category) } catch (e: Exception) { ExpenseCategory.OTHER }, try { RecurrenceFrequency.valueOf(recurrence) } catch (e: Exception) { RecurrenceFrequency.NONE }, tags, note, receiptImageUrl, createdBy, createdByName, createdAt, updatedAt, isDeleted, participants, payers)
 
 fun ExpenseParticipant.toEntity(expenseId: String) = ExpenseParticipantEntity(if (id.isEmpty()) "${expenseId}_$userId" else id, expenseId, userId, userName, splitType.name, amount, percentage, shares)
 fun ExpenseParticipantEntity.toDomain() = ExpenseParticipant(id, expenseId, userId, userName, try { SplitType.valueOf(splitType) } catch (e: Exception) { SplitType.EQUAL }, amount, percentage, shares)

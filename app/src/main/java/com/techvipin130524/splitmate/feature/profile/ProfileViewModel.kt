@@ -83,6 +83,20 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun updateMonthlyBudget(budgetPaise: Long) {
+        val currentUser = _uiState.value.user ?: return
+        viewModelScope.launch {
+            val updatedUser = currentUser.copy(monthlyBudgetPaise = budgetPaise, updatedAt = System.currentTimeMillis())
+            userRepository.createOrUpdateUser(updatedUser)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(
+                        user = updatedUser,
+                        message = "Monthly budget updated!"
+                    )
+                }
+        }
+    }
+
     fun logout() {
         authRepository.logout()
     }

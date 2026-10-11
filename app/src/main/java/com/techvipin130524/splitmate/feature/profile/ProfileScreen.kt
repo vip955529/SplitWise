@@ -37,7 +37,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.ui.text.input.KeyboardType
 import com.techvipin130524.splitmate.core.designsystem.component.PersonAvatar
+import com.techvipin130524.splitmate.core.utils.CurrencyUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +52,9 @@ fun ProfileScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var showEditDialog by remember { mutableStateOf(false) }
+    var showBudgetDialog by remember { mutableStateOf(false) }
     var newNameInput by remember { mutableStateOf("") }
+    var newBudgetInput by remember { mutableStateOf("") }
 
     LaunchedEffect(uiState.message, uiState.error) {
         uiState.message?.let {
@@ -115,6 +121,26 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.padding(horizontal = 4.dp))
                         Text("Edit Name")
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            newBudgetInput = if ((user?.monthlyBudgetPaise ?: 0L) > 0) {
+                                (user?.monthlyBudgetPaise!! / 100).toString()
+                            } else ""
+                            showBudgetDialog = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.AccountBalanceWallet, contentDescription = null)
+                        Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                        Text(
+                            if ((user?.monthlyBudgetPaise ?: 0L) > 0)
+                                "Monthly Budget: ${CurrencyUtils.formatPaise(user?.monthlyBudgetPaise ?: 0L)}"
+                            else "Set Monthly Budget Limit"
+                        )
+                    }
                 }
             }
 
@@ -159,6 +185,38 @@ fun ProfileScreen(
             },
             dismissButton = {
                 OutlinedButton(onClick = { showEditDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showBudgetDialog) {
+        AlertDialog(
+            onDismissRequest = { showBudgetDialog = false },
+            title = { Text("Set Monthly Budget Goal") },
+            text = {
+                OutlinedTextField(
+                    value = newBudgetInput,
+                    onValueChange = { newBudgetInput = it },
+                    label = { Text("Monthly Budget (₹)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val budgetPaise = CurrencyUtils.parseToPaise(newBudgetInput) ?: 0L
+                        viewModel.updateMonthlyBudget(budgetPaise)
+                        showBudgetDialog = false
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showBudgetDialog = false }) {
                     Text("Cancel")
                 }
             }

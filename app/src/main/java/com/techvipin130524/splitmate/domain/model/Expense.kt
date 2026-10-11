@@ -35,6 +35,7 @@ data class Expense(
     val currency: String = "INR",
     val category: ExpenseCategory = ExpenseCategory.OTHER,
     val recurrence: RecurrenceFrequency = RecurrenceFrequency.NONE,
+    val tags: String = "",
     val note: String = "",
     val receiptImageUrl: String? = null,
     val createdBy: String = "",

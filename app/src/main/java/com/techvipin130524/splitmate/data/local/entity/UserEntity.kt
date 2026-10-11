@@ -9,6 +9,7 @@ data class UserEntity(
     val name: String,
     val email: String,
     val profileImageUrl: String?,
+    val monthlyBudgetPaise: Long,
     val createdAt: Long,
     val updatedAt: Long
 )
