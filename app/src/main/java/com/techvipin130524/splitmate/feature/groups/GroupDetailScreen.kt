@@ -1,7 +1,9 @@
 package com.techvipin130524.splitmate.feature.groups
 
 import android.content.Intent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.ui.platform.LocalContext
@@ -33,6 +35,8 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -72,7 +76,8 @@ fun GroupDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var selectedCategoryFilter by remember { mutableStateOf<ExpenseCategory?>(null) }
-    val tabs = listOf("Expenses", "Balances", "Members", "Activity")
+    var memberSearchQuery by remember { mutableStateOf("") }
+    val tabs = listOf("Expenses", "Balances", "Members", "Activity", "Analytics")
 
     LaunchedEffect(groupId) {
         viewModel.selectGroup(groupId)
@@ -386,81 +391,96 @@ fun GroupDetailScreen(
                     val currentMemberRole = group?.members?.find { it.userId == uiState.currentUserId }?.role ?: "MEMBER"
                     val isAdmin = currentMemberRole == "ADMIN" || group?.createdBy == uiState.currentUserId
 
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                    ) {
-                        items(group?.members ?: emptyList()) { member ->
-                            var memberMenuExpanded by remember { mutableStateOf(false) }
+                    val allMembers = group?.members ?: emptyList()
+                    val filteredMembers = if (memberSearchQuery.isBlank()) {
+                        allMembers
+                    } else {
+                        val q = memberSearchQuery.trim().lowercase()
+                        allMembers.filter { it.userName.lowercase().contains(q) || it.userEmail.lowercase().contains(q) }
+                    }
 
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Row(
+                    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                        OutlinedTextField(
+                            value = memberSearchQuery,
+                            onValueChange = { memberSearchQuery = it },
+                            label = { Text("Search members...") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        LazyColumn(modifier = Modifier.weight(1f)) {
+                            items(filteredMembers) { member ->
+                                var memberMenuExpanded by remember { mutableStateOf(false) }
+
+                                Card(
                                     modifier = Modifier
-                                        .padding(16.dp)
-                                        .fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    shape = RoundedCornerShape(12.dp)
                                 ) {
-                                    PersonAvatar(name = member.userName, size = 40)
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
+                                    Row(
+                                        modifier = Modifier
+                                            .padding(16.dp)
+                                            .fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        PersonAvatar(name = member.userName, size = 40)
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = member.userName,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = member.userEmail,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                         Text(
-                                            text = member.userName,
-                                            style = MaterialTheme.typography.bodyLarge,
+                                            text = member.role,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = if (member.role == "ADMIN") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontWeight = FontWeight.Bold
                                         )
-                                        Text(
-                                            text = member.userEmail,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    Text(
-                                        text = member.role,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (member.role == "ADMIN") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontWeight = FontWeight.Bold
-                                    )
 
-                                    if (isAdmin && member.userId != uiState.currentUserId) {
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Box {
-                                            IconButton(onClick = { memberMenuExpanded = true }) {
-                                                Icon(Icons.Default.MoreVert, contentDescription = "Member Actions")
-                                            }
-                                            DropdownMenu(
-                                                expanded = memberMenuExpanded,
-                                                onDismissRequest = { memberMenuExpanded = false }
-                                            ) {
-                                                if (member.role == "ADMIN") {
+                                        if (isAdmin && member.userId != uiState.currentUserId) {
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Box {
+                                                IconButton(onClick = { memberMenuExpanded = true }) {
+                                                    Icon(Icons.Default.MoreVert, contentDescription = "Member Actions")
+                                                }
+                                                DropdownMenu(
+                                                    expanded = memberMenuExpanded,
+                                                    onDismissRequest = { memberMenuExpanded = false }
+                                                ) {
+                                                    if (member.role == "ADMIN") {
+                                                        DropdownMenuItem(
+                                                            text = { Text("Make Member") },
+                                                            onClick = {
+                                                                memberMenuExpanded = false
+                                                                viewModel.updateMemberRole(groupId, member.userId, "MEMBER")
+                                                            }
+                                                        )
+                                                    } else {
+                                                        DropdownMenuItem(
+                                                            text = { Text("Make Admin") },
+                                                            onClick = {
+                                                                memberMenuExpanded = false
+                                                                viewModel.updateMemberRole(groupId, member.userId, "ADMIN")
+                                                            }
+                                                        )
+                                                    }
                                                     DropdownMenuItem(
-                                                        text = { Text("Make Member") },
+                                                        text = { Text("Remove from Group", color = MaterialTheme.colorScheme.error) },
                                                         onClick = {
                                                             memberMenuExpanded = false
-                                                            viewModel.updateMemberRole(groupId, member.userId, "MEMBER")
-                                                        }
-                                                    )
-                                                } else {
-                                                    DropdownMenuItem(
-                                                        text = { Text("Make Admin") },
-                                                        onClick = {
-                                                            memberMenuExpanded = false
-                                                            viewModel.updateMemberRole(groupId, member.userId, "ADMIN")
+                                                            viewModel.removeMember(groupId, member.userId)
                                                         }
                                                     )
                                                 }
-                                                DropdownMenuItem(
-                                                    text = { Text("Remove from Group", color = MaterialTheme.colorScheme.error) },
-                                                    onClick = {
-                                                        memberMenuExpanded = false
-                                                        viewModel.removeMember(groupId, member.userId)
-                                                    }
-                                                )
                                             }
                                         }
                                     }
@@ -503,6 +523,83 @@ fun GroupDetailScreen(
                                             text = log.description,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                4 -> {
+                    // Analytics Tab
+                    val groupExpenses = uiState.groupExpenses
+                    val totalGroupSpend = groupExpenses.sumOf { it.totalAmount }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Total Group Spending",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = CurrencyUtils.formatPaise(totalGroupSpend),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Text(
+                            text = "Member Contributions Breakdown",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        val members = group?.members ?: emptyList()
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            items(members) { m ->
+                                val paidByMember = groupExpenses.filter { it.createdBy == m.userId || it.payers.any { p -> p.userId == m.userId } }
+                                    .sumOf { exp -> exp.payers.find { it.userId == m.userId }?.amount ?: exp.totalAmount }
+
+                                val fraction = if (totalGroupSpend > 0) (paidByMember.toFloat() / totalGroupSpend).coerceIn(0f, 1f) else 0f
+
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(m.userName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                            Text(CurrencyUtils.formatPaise(paidByMember), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                                        }
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        LinearProgressIndicator(
+                                            progress = { fraction },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(6.dp)
+                                                .clip(RoundedCornerShape(3.dp)),
+                                            color = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                 }
