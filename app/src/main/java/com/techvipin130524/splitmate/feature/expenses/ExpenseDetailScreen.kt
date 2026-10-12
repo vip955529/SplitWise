@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -74,6 +75,17 @@ fun ExpenseDetailScreen(
                 },
                 actions = {
                     if (expense != null) {
+                        IconButton(onClick = {
+                            viewModel.updateDescription(expense.description)
+                            viewModel.updateTotalAmount((expense.totalAmount / 100).toString())
+                            viewModel.updateCategory(expense.category)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Duplicate Expense"
+                            )
+                        }
+
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,

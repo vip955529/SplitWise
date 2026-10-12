@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.DropdownMenuItem
@@ -61,6 +62,7 @@ fun ProfileScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var showBudgetDialog by remember { mutableStateOf(false) }
     var showUpiDialog by remember { mutableStateOf(false) }
+    var showRatesDialog by remember { mutableStateOf(false) }
     var newNameInput by remember { mutableStateOf("") }
     var newBudgetInput by remember { mutableStateOf("") }
     var newUpiInput by remember { mutableStateOf("") }
@@ -167,6 +169,17 @@ fun ProfileScreen(
                                 "Default UPI ID: ${user?.preferredUpiId}"
                             else "Set Default UPI ID"
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = { showRatesDialog = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.CurrencyExchange, contentDescription = null)
+                        Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                        Text("View Exchange Rates Guide")
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -295,6 +308,30 @@ fun ProfileScreen(
             dismissButton = {
                 OutlinedButton(onClick = { showUpiDialog = false }) {
                     Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showRatesDialog) {
+        AlertDialog(
+            onDismissRequest = { showRatesDialog = false },
+            title = { Text("Currency Exchange Rates Guide") },
+            text = {
+                Column {
+                    Text("Standard Exchange Rates to INR (₹):", style = MaterialTheme.typography.labelSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• 1 USD ($) = ₹83.00 INR")
+                    Text("• 1 EUR (€) = ₹90.00 INR")
+                    Text("• 1 GBP (£) = ₹105.00 INR")
+                    Text("• 1 CAD (CA$) = ₹61.00 INR")
+                    Text("• 1 AED (AED) = ₹22.60 INR")
+                    Text("• 1 JPY (¥) = ₹0.55 INR")
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showRatesDialog = false }) {
+                    Text("Close")
                 }
             }
         )
