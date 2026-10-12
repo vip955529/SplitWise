@@ -1,6 +1,7 @@
 package com.techvipin130524.splitmate.feature.groups
 
 import android.content.Intent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.draw.clip
@@ -27,6 +28,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.core.content.FileProvider
 import java.io.File
 import androidx.compose.material.icons.filled.Payment
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -64,6 +66,8 @@ import com.techvipin130524.splitmate.core.designsystem.component.ExpenseRow
 import com.techvipin130524.splitmate.core.designsystem.component.PersonAvatar
 import com.techvipin130524.splitmate.core.utils.CurrencyUtils
 
+import com.techvipin130524.splitmate.domain.model.Settlement
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupDetailScreen(
@@ -76,6 +80,8 @@ fun GroupDetailScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var selectedCategoryFilter by remember { mutableStateOf<ExpenseCategory?>(null) }
+    var dateFilter by remember { mutableStateOf("ALL") }
+    var selectedSettlementForDetails by remember { mutableStateOf<Settlement?>(null) }
     var memberSearchQuery by remember { mutableStateOf("") }
     var activitySearchQuery by remember { mutableStateOf("") }
     val tabs = listOf("Expenses", "Balances", "Members", "Activity", "Analytics")
@@ -246,24 +252,96 @@ fun GroupDetailScreen(
             when (selectedTabIndex) {
                 0 -> {
                     // Expenses Tab
-                    val filteredExpenses = if (selectedCategoryFilter == null) {
-                        uiState.groupExpenses
-                    } else {
-                        uiState.groupExpenses.filter { it.category == selectedCategoryFilter }
+                    val now = System.currentTimeMillis()
+                    val oneMonthAgo = now - 30L * 24 * 60 * 60 * 1000
+                    val sevenDaysAgo = now - 7L * 24 * 60 * 60 * 1000
+
+                    val dateFilteredExpenses = uiState.groupExpenses.filter { e ->
+                        when (dateFilter) {
+                            "THIS_MONTH" -> e.createdAt >= oneMonthAgo
+                            "LAST_7_DAYS" -> e.createdAt >= sevenDaysAgo
+                            else -> true
+                        }
                     }
 
+                    val filteredExpenses = if (selectedCategoryFilter == null) {
+                        dateFilteredExpenses
+                    } else {
+                        dateFilteredExpenses.filter { it.category == selectedCategoryFilter }
+                    }
+
+                    val totalGroupSpend = uiState.groupExpenses.sumOf { it.totalAmount }
+                    val userPaidInGroup = uiState.groupExpenses.filter { it.createdBy == uiState.currentUserId || it.payers.any { p -> p.userId == uiState.currentUserId } }
+                        .sumOf { exp -> exp.payers.find { it.userId == uiState.currentUserId }?.amount ?: exp.totalAmount }
+                    val userShareInGroup = uiState.groupExpenses.sumOf { exp -> exp.participants.find { it.userId == uiState.currentUserId }?.amount ?: 0L }
+                    val myNetInGroup = userPaidInGroup - userShareInGroup
+
                     Column(modifier = Modifier.fillMaxSize()) {
-                        // Category Filter Chips Row
+                        // Group Summary Header Card
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text("Group Spend", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(CurrencyUtils.formatPaise(totalGroupSpend), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text("Your Net Balance", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(
+                                        CurrencyUtils.formatSignedPaise(myNetInGroup),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (myNetInGroup >= 0) Color(0xFF2E7D32) else Color(0xFFC62828)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Category & Date Filter Chips Row
                         LazyRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .padding(horizontal = 16.dp, vertical = 4.dp)
                         ) {
+                            item {
+                                FilterChip(
+                                    selected = dateFilter == "ALL",
+                                    onClick = { dateFilter = "ALL" },
+                                    label = { Text("All Time") },
+                                    modifier = Modifier.padding(end = 6.dp)
+                                )
+                            }
+                            item {
+                                FilterChip(
+                                    selected = dateFilter == "THIS_MONTH",
+                                    onClick = { dateFilter = "THIS_MONTH" },
+                                    label = { Text("This Month") },
+                                    modifier = Modifier.padding(end = 6.dp)
+                                )
+                            }
+                            item {
+                                FilterChip(
+                                    selected = dateFilter == "LAST_7_DAYS",
+                                    onClick = { dateFilter = "LAST_7_DAYS" },
+                                    label = { Text("Last 7 Days") },
+                                    modifier = Modifier.padding(end = 6.dp)
+                                )
+                            }
                             item {
                                 FilterChip(
                                     selected = selectedCategoryFilter == null,
                                     onClick = { selectedCategoryFilter = null },
-                                    label = { Text("All") },
+                                    label = { Text("All Categories") },
                                     modifier = Modifier.padding(end = 6.dp)
                                 )
                             }
@@ -356,6 +434,17 @@ fun GroupDetailScreen(
                                     Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
+                                            .clickable {
+                                                selectedSettlementForDetails = Settlement(
+                                                    groupId = groupId,
+                                                    fromUserId = debt.fromUserId,
+                                                    fromUserName = debt.fromUserName,
+                                                    toUserId = debt.toUserId,
+                                                    toUserName = debt.toUserName,
+                                                    amount = debt.amount,
+                                                    note = "Calculated via Greedy Debt Simplification Engine"
+                                                )
+                                            }
                                             .padding(vertical = 4.dp),
                                         shape = RoundedCornerShape(12.dp),
                                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -676,5 +765,26 @@ fun GroupDetailScreen(
                 }
             }
         }
+    }
+
+    selectedSettlementForDetails?.let { settlement ->
+        AlertDialog(
+            onDismissRequest = { selectedSettlementForDetails = null },
+            title = { Text("Settlement Details") },
+            text = {
+                Column {
+                    Text("Payer: ${settlement.fromUserName}", fontWeight = FontWeight.Bold)
+                    Text("Recipient: ${settlement.toUserName}", fontWeight = FontWeight.Bold)
+                    Text("Amount: ${CurrencyUtils.formatPaise(settlement.amount)}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Note: ${settlement.note}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
+            confirmButton = {
+                Button(onClick = { selectedSettlementForDetails = null }) {
+                    Text("Close")
+                }
+            }
+        )
     }
 }
