@@ -21,7 +21,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import android.content.Intent
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,6 +56,8 @@ fun FriendDetailScreen(
 
     val friend = uiState.friend
 
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -60,6 +65,29 @@ fun FriendDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    if (friend != null) {
+                        IconButton(
+                            onClick = {
+                                val netBal = uiState.friendNetBalancePaise
+                                val statusStr = when {
+                                    netBal > 0 -> "${friend.friendName} owes you ${CurrencyUtils.formatPaise(netBal)}"
+                                    netBal < 0 -> "You owe ${friend.friendName} ${CurrencyUtils.formatPaise(-netBal)}"
+                                    else -> "Settled up with ${friend.friendName}"
+                                }
+                                val report = "🤝 SplitMate Friend Balance Statement\nWith: ${friend.friendName}\nStatus: $statusStr"
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_SUBJECT, "SplitMate Statement - ${friend.friendName}")
+                                    putExtra(Intent.EXTRA_TEXT, report)
+                                }
+                                context.startActivity(Intent.createChooser(intent, "Share Friend Balance"))
+                            }
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = "Share Friend Statement")
+                        }
                     }
                 }
             )

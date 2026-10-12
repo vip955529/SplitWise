@@ -77,6 +77,7 @@ fun GroupDetailScreen(
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var selectedCategoryFilter by remember { mutableStateOf<ExpenseCategory?>(null) }
     var memberSearchQuery by remember { mutableStateOf("") }
+    var activitySearchQuery by remember { mutableStateOf("") }
     val tabs = listOf("Expenses", "Balances", "Members", "Activity", "Analytics")
 
     LaunchedEffect(groupId) {
@@ -492,38 +493,57 @@ fun GroupDetailScreen(
 
                 3 -> {
                     // Activity Feed Tab
-                    if (uiState.groupActivityLogs.isEmpty()) {
-                        EmptyState(
-                            title = "No Activity Logged",
-                            subtitle = "Expenses and settlements recorded in this group will appear here.",
-                            modifier = Modifier.fillMaxSize()
-                        )
+                    val allLogs = uiState.groupActivityLogs
+                    val filteredLogs = if (activitySearchQuery.isBlank()) {
+                        allLogs
                     } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
-                        ) {
-                            items(uiState.groupActivityLogs, key = { it.id }) { log ->
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                                ) {
-                                    Column(modifier = Modifier.padding(16.dp)) {
-                                        Text(
-                                            text = log.title,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = log.description,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                        val q = activitySearchQuery.trim().lowercase()
+                        allLogs.filter { it.title.lowercase().contains(q) || it.description.lowercase().contains(q) }
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = activitySearchQuery,
+                            onValueChange = { activitySearchQuery = it },
+                            label = { Text("Search activity logs...") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        if (filteredLogs.isEmpty()) {
+                            EmptyState(
+                                title = "No Activity Found",
+                                subtitle = "Expenses and settlements recorded in this group will appear here.",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            LazyColumn(modifier = Modifier.weight(1f)) {
+                                items(filteredLogs, key = { it.id }) { log ->
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                    ) {
+                                        Column(modifier = Modifier.padding(16.dp)) {
+                                            Text(
+                                                text = log.title,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = log.description,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -572,35 +592,82 @@ fun GroupDetailScreen(
 
                         val members = group?.members ?: emptyList()
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
-                            items(members) { m ->
-                                val paidByMember = groupExpenses.filter { it.createdBy == m.userId || it.payers.any { p -> p.userId == m.userId } }
-                                    .sumOf { exp -> exp.payers.find { it.userId == m.userId }?.amount ?: exp.totalAmount }
+                            item {
+                                Column {
+                                    members.forEach { m ->
+                                        val paidByMember = groupExpenses.filter { it.createdBy == m.userId || it.payers.any { p -> p.userId == m.userId } }
+                                            .sumOf { exp -> exp.payers.find { it.userId == m.userId }?.amount ?: exp.totalAmount }
 
-                                val fraction = if (totalGroupSpend > 0) (paidByMember.toFloat() / totalGroupSpend).coerceIn(0f, 1f) else 0f
+                                        val fraction = if (totalGroupSpend > 0) (paidByMember.toFloat() / totalGroupSpend).coerceIn(0f, 1f) else 0f
 
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Column(modifier = Modifier.padding(12.dp)) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Text(m.userName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                            Text(CurrencyUtils.formatPaise(paidByMember), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-                                        }
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        LinearProgressIndicator(
-                                            progress = { fraction },
+                                        Card(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .height(6.dp)
-                                                .clip(RoundedCornerShape(3.dp)),
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
+                                                .padding(vertical = 4.dp),
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) {
+                                            Column(modifier = Modifier.padding(12.dp)) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                ) {
+                                                    Text(m.userName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                                    Text(CurrencyUtils.formatPaise(paidByMember), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                                                }
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                LinearProgressIndicator(
+                                                    progress = { fraction },
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .height(6.dp)
+                                                        .clip(RoundedCornerShape(3.dp)),
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(20.dp))
+
+                                    Text(
+                                        text = "Group Category Spending Breakdown",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    ExpenseCategory.entries.forEach { cat ->
+                                        val catSpend = groupExpenses.filter { it.category == cat }.sumOf { it.totalAmount }
+                                        if (catSpend > 0) {
+                                            val catFraction = if (totalGroupSpend > 0) (catSpend.toFloat() / totalGroupSpend).coerceIn(0f, 1f) else 0f
+                                            Card(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 4.dp),
+                                                shape = RoundedCornerShape(12.dp),
+                                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                            ) {
+                                                Column(modifier = Modifier.padding(12.dp)) {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.SpaceBetween
+                                                    ) {
+                                                        Text(cat.displayName, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                                                        Text(CurrencyUtils.formatPaise(catSpend), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                                    }
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    LinearProgressIndicator(
+                                                        progress = { catFraction },
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .height(6.dp)
+                                                            .clip(RoundedCornerShape(3.dp)),
+                                                        color = MaterialTheme.colorScheme.secondary
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
