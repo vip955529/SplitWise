@@ -2295,5 +2295,6 @@ All 14 phases from Product Planning to Production Release have been fully comple
 18. **Advanced Phase (Group Analytics & Member Search)**: Group member spending breakdown analytics tab (`Analytics`) and real-time group member search bar.
 19. **Advanced Phase (Category Breakdown & Share Statement)**: Group Category Spending Breakdown in Analytics, Activity Feed live search bar, and Shareable Friend Balance Statement generator.
 20. **Advanced Phase (Group Spend Header & Date Range Filter)**: Group Spend Summary Header card, Date Range Filter chips (`All Time`, `This Month`, `Last 7 Days`), and Settlement Details modal dialog.
+21. **Advanced Phase (Duplicate Expense & Rates Guide)**: Quick Duplicate Expense action (`ContentCopy`) and Currency Exchange Rates Reference Guide modal.
 
 **SplitMate is a complete, production-ready product.**
